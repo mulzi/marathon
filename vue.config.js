@@ -11,7 +11,8 @@ const proxyconfig = {
   // target: 'https://192.168.1.20',
   // target: `https://dsp.anystreaming.cn`,
   // target: `https://video.kxwell.com`,
-  target: `https://ssv.anystreaming.cn`,
+  // target: `https://ssv.anystreaming.cn`,
+  target: `http://101.37.172.182:30080/`,
   changeOrigin: true,
   ws: true
 }

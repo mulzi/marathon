@@ -14,6 +14,9 @@ import VueClipboard from 'vue-clipboard2'
 import Vant from 'vant';
 import 'vant/lib/index.css';
 import 'animate.css'
+// import * as VConsole from "vconsole";
+//
+// const vconsole = new VConsole()
 
 localStorage.typepage = 'wxpage'
 
@@ -55,38 +58,38 @@ Vue.use(Vant);
   /**
    * 微信挂载
    */
-  // const res = await getDspWeixinInfo({
-  //   url: (location.href.split('#')[0]),
-  // }, mediaPath)
-  // if (res.data.ret.code === 0) {
-  //   const wxinfo = res.data.data
-  //   Object.assign(window.$config.WXInfo, {
-  //     appid: wxinfo.appid,
-  //     openid: wxinfo.weixinuser.openid,
-  //     nickname: wxinfo.weixinuser.nickname,
-  //     headimgurl: wxinfo.weixinuser.headimgurl,
-  //     smart_count: wxinfo.smart_count
-  //   })
-  //   await wx.config({
-  //     debug: window.$config.WXInfo.debug, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-  //     appId: wxinfo.appid, // 必填，公众号的唯一标识
-  //     timestamp: wxinfo.timestamp, // 必填，生成签名的时间戳
-  //     nonceStr: wxinfo.noncestr, // 必填，生成签名的随机串
-  //     signature: wxinfo.signature,// 必填，签名
-  //     jsApiList: ['chooseImage', 'getLocalImgData', 'previewImage', 'downloadImage',
-  //       'startRecord',
-  //       'stopRecord',
-  //       'onVoiceRecordEnd',
-  //       'playVoice',
-  //       'pauseVoice',
-  //       'stopVoice',
-  //       'onVoicePlayEnd',
-  //       'uploadVoice',
-  //       'downloadVoice',
-  //       'translateVoice'
-  //     ] // 必填，需要使用的JS接口列表
-  //   });
-  // }
+  const res = await getDspWeixinInfo({
+    url: (location.href.split('#')[0]),
+  }, mediaPath)
+  if (res.data.ret.code === 0) {
+    const wxinfo = res.data.data
+    Object.assign(window.$config.WXInfo, {
+      appid: wxinfo.appid,
+      openid: wxinfo.weixinuser.openid,
+      nickname: wxinfo.weixinuser.nickname,
+      headimgurl: wxinfo.weixinuser.headimgurl,
+      smart_count: wxinfo.smart_count
+    })
+    await wx.config({
+      debug: window.$config.WXInfo.debug, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+      appId: wxinfo.appid, // 必填，公众号的唯一标识
+      timestamp: wxinfo.timestamp, // 必填，生成签名的时间戳
+      nonceStr: wxinfo.noncestr, // 必填，生成签名的随机串
+      signature: wxinfo.signature,// 必填，签名
+      jsApiList: ['chooseImage', 'getLocalImgData', 'previewImage', 'downloadImage',
+        'startRecord',
+        'stopRecord',
+        'onVoiceRecordEnd',
+        'playVoice',
+        'pauseVoice',
+        'stopVoice',
+        'onVoicePlayEnd',
+        'uploadVoice',
+        'downloadVoice',
+        'translateVoice'
+      ] // 必填，需要使用的JS接口列表
+    });
+  }
 
 Vue.prototype.mediaUpload = null;
 

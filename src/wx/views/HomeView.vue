@@ -1,6 +1,30 @@
 <template>
   <div id="wx-home">
-    <div class="wx-content">
+    <div class="bg-index" >
+      <img src="@/assets/wxImages/image/index_bg1.jpg" alt="">
+      <img src="@/assets/wxImages/image/index_bg2.jpg" alt="">
+      <img src="@/assets/wxImages/image/index_bg3.jpg" alt="">
+      <img src="@/assets/wxImages/image/index_bg4.jpg" alt="">
+      <img src="@/assets/wxImages/image/index_bg5.jpg" alt="">
+    </div>
+    <div class="right-img"  @click.stop="uploadHandle" v-if="searchtypes.includes('face')">
+      <img src="@/assets/wxImages/image/index_02.png" alt="">
+    </div>
+    <div class="input_box">
+      <van-field
+                 v-model="platenumber" placeholder="请输入号码牌">
+        <template #button>
+          <van-button size="small" type="default"
+                      v-if="searchtypes.includes('number_plate')"
+                      @click.stop="clickPost">抽取视频</van-button>
+        </template>
+      </van-field>
+    </div>
+    <div class="right-r" @click="goProductsHandler">
+      <p>查看</p>
+      <p>成品</p>
+    </div>
+    <div v-if="false" class="wx-content">
       <div class="wx-image">
         <div class="wx-image-line">
           <div class="wx-image">
@@ -16,7 +40,7 @@
         {{ wxmessage }}
       </div>
     </div>
-    <div class="wx-tips">
+    <div v-if="false" class="wx-tips">
       <div class="wx-tips-box">
         <div class="wx-tips-image sun"></div>
         <div class="wx-tips-title">光线充足</div>
@@ -38,7 +62,7 @@
         <div class="wx-tips-title">刷新</div>
       </div>
     </div>
-    <div class="wx-control">
+    <div v-if="false" class="wx-control">
       <van-field v-if="searchtypes.includes('number_plate')"
         :disabled="!checked || ['running', 'success'].includes(task_status)"
         class="control-button primary-control wx-plate-number"
@@ -53,7 +77,7 @@
         class="control-button primary-control" type="default" block
         :disabled="!checked || ['running', 'success'].includes(task_status)"
         @click.stop="uploadHandle"
-      >{{ uploadmessage }} 
+      >{{ uploadmessage }}
         <span v-if="searchtypes.includes('number_plate')" class="upload-optional">
           (可选)
         </span>
@@ -61,7 +85,7 @@
       <van-button class="control-button default-control" type="default" block
         @click.stop="goProducts">精选视频，编号获取</van-button>
     </div>
-    <footer class="wx-footer">
+    <footer v-if="false" class="wx-footer">
       <van-checkbox v-model="checked" @change="checkedHandle">
         同意视频采集并为本人二次传播承担责任。
         <template #icon="props">
@@ -75,10 +99,9 @@
 </template>
 
 <script>
+
 import Vue from 'vue'
 import { Toast } from 'vant';
-import { downloadFileByBase64, calculationFormat, sizeFormat } from '@/unit/index.js'
-
 import { ProductList, createSmartVideo, deleteSmartVideo, GetProjectsList } from '@/api/projects.js'
 import { TaskBase64ToMedia } from '@/api/task.js'
 
@@ -132,6 +155,7 @@ export default {
       priviewInfo: {
         file_url: ''
       },
+      cFlag:true,
       // 添加任务
       sheetVisible: false,
       actions: [
@@ -155,7 +179,7 @@ export default {
     }
   },
   created() {
-    this.getLists()
+    // this.getLists()
     if (localStorage.checked === 'true') {
       this.checked = true
     } else {
@@ -174,6 +198,8 @@ export default {
         }
       }
     })
+
+
   },
   beforeDestroy() {
     if (window.freshInterval) {
@@ -182,23 +208,35 @@ export default {
     }
   },
   methods: {
+
+
+    clickPost(){
+      if (this.platenumber.length < 4){
+        Toast('请输入4位以上的号码！')
+        return false
+      }
+      if (!this.cFlag){
+        return false
+      }
+      this.cFlag = false
+      setTimeout(()=>{
+        this.cFlag = true
+      }, 3000)
+      this.startTask()
+    },
+
     checkedHandle(val) {
       this.checked = val
       localStorage.checked = val
     },
-    createTask() {
-      this.sheetVisible = true
-    },
     uploadMessage() {
       this.dialogVisible = true
-    },
-    deleteImageHandle() {
-      this.imgurl = ''
     },
     goProducts() {
       this.$router.push('searchproducts')
     },
     uploadHandle() {
+      console.log('点击了图片上传')
       const thiz = this
       wx.chooseImage({
         count: 1, // 默认9
@@ -217,6 +255,7 @@ export default {
                 checkImage = 'data:image/png;base64,' + localData;
               }
               thiz.imgurl = checkImage
+              console.log('获取了图片成功')
               thiz.startTask()
             }
           });
@@ -224,6 +263,12 @@ export default {
       });
     },
     async startTask() {
+      const toast = Toast.loading({
+        duration: 0,       // 持续展示 toast
+        forbidClick: true, // 禁用背景点击
+        loadingType: 'spinner',
+        message: 'loading...'
+      });
       let image_id = null
       const wxinfo = this.$root.Config.WXInfo
       const urlobj = JSON.parse(sessionStorage.urlobj)
@@ -245,8 +290,9 @@ export default {
             code_mark_str: this.$root.Config.WXInfo.code_mark_str
           })
         }
-        
+
         const res = await TaskBase64ToMedia(params)
+        console.log('图片上传结果',res)
         if (res.data.ret.code === 0) {
           image_id = res.data.data.media_id
           this.task_status = 'success';
@@ -287,18 +333,29 @@ export default {
           })
         }
         const resp = await createSmartVideo(resProp, this.$root.mediaPath)
+        console.log(resp,'创建图片任务结果')
         if (resp.data.ret.code) {
           this.task_status = '';
           Toast(resp.data.ret.cn);
         } else {
+
+          setTimeout(()=>{
+            Toast.clear();
+            this.$router.push({
+              path: '/products'
+            })
+          },5000)
           const timeoutFresh = () => {
             if (window.freshInterval) {
               clearTimeout(window.freshInterval)
             }
+
             window.freshInterval = setTimeout(async () => {
               await this.getLists()
+              console.log(this.lists)
               if (this.lists.length > 0) {
                 const hasrunning = this.lists.filter(row => row.status === 'init')
+                console.log(hasrunning,!hasrunning?.length,this.$route.path)
                 if (!hasrunning?.length && this.$route.path !== '/products') {
                   this.$router.push({
                     path: '/products'
@@ -478,13 +535,13 @@ export default {
             this.loading = false
             MessageBox('创建任务错误', error.message);
           }
-          
+
         }
       } catch (error) {
         this.loading = false
         MessageBox('上传错误', error.message);
       }
-      
+
     },
     async loadMore() {
       if (this.totalNum <= this.lists.length) {
@@ -542,15 +599,18 @@ export default {
           this.lists = []
         }
         this.lists = this.lists.concat(rows)
+        console.log(this.lists)
         this.initTaskStatus()
       } catch (error) {
-        
+
       }
     },
     initTaskStatus() {
       if (this.lists.length > 0) {
+        console.log('上传视频完成')
         try {
           const hasrunning = this.lists.filter(row => row.status === 'init')
+          console.log('hasrunning',hasrunning)
           if (hasrunning?.length) {
             if (hasrunning[0]?.userimgurl) {
               this.imgurl = hasrunning[0].userimgurl
@@ -562,10 +622,12 @@ export default {
               }
               window.freshInterval = setTimeout(async () => {
                 await this.getLists()
+                console.log('this.lists',this.lists)
                 if (this.lists.length > 0) {
                   const hasrunning = this.lists.filter(row => row.status === 'init')
+                  console.log(hasrunning,this.$route.path)
                   if (!hasrunning?.length && this.$route.path !== '/products') {
-                    this.$router.push({
+                    await this.$router.push({
                       path: '/products'
                     })
                   } else {
@@ -605,156 +667,7 @@ export default {
         return {}
       }
     },
-    /**
-     * 刷新列表
-     */
-    refreshHandle() {
-      this.refreshList()
-    },
-    choseHandle(item) {
-      this.choselist = item
-    },
-    appTouch() {
-      this.choselist = null
-    },
-    cancelChose() {
-      this.choselist = null
-    },
-    timeFormat(item) {
-      return moment(item.created_at).format('YYYY-MM-DD HH:mm:ss')
-    },
-    /**
-     * 列表项状态format
-     */
-    statusMsg(item) {
-      switch (item.status) {
-        case 'init':
-          return `处理中, 请等待...`
-          break;
-        case 'success':
-          return `成功`
-          break;
-        case 'fail':
-          return `处理失败: ${item.config.error_msg}`
-          break;
-      
-        default:
-          break;
-      }
-    },
-    /**
-     * 列表项时长format
-     */
-    durationFormater(row) {
-      let rowtime = +row?.config?.duration
-      if (isNaN(rowtime)) {
-        return '-'
-      } else {
-        return calculationFormat((rowtime || 0).toFixed(3) * 1000)
-      }
-    },
-    sizeFormater(row) {
-      let rowsize = +row?.config?.size
-      if (isNaN(rowsize)) {
-        return '-'
-      } else {
-        return sizeFormat(rowsize)
-      }
-    },
-    viewImage(item) {
-      wx.previewImage({
-        current: item.userimgurl, // 当前显示图片的http链接
-        urls: [item.userimgurl] // 需要预览的图片http链接列表
-      });
-    },
-    async priviewHandle(item) {
-      this.priviewInfo = item
-      this.popupVisible = true
-      await this.$nextTick()
-      const video = document.getElementById('viewVideo')
-      video.addEventListener('canplay', () => {
-        video.play()
-        video.muted = false
-      })
-    },
-    downloadHandle(item) {
-      const userAgent = navigator.userAgent.toLowerCase();
-      // 判断是否在微信浏览器中
-      if (userAgent.indexOf('micromessenger') !== -1) {
-        // 是微信浏览器
-        console.log('当前在微信浏览器');
-        this.$copyText(item.video_url).then(
-          (e) => {
-            Toast('下载链接复制成功，请在其他浏览器下载');
-          },
-          (e) => {
-            Toast('复制失败');
-          }
-        );
 
-      } else {
-        // 不是微信浏览器
-        console.log('当前在其他浏览器');
-        let name = item.video_url.substring(item.video_url.lastIndexOf('/')+1, item.video_url.length)
-  
-        downloadFileByBase64(item.video_url, name)
-      }
-      
-    },
-    deleteHandle(item) {
-      MessageBox.confirm(`您确定删除该条记录吗`).then( async action => {
-        const res = await deleteSmartVideo({
-          id: item.id,
-          activity_id: +JSON.parse(sessionStorage.urlobj).activity_id
-        }, this.$root.mediaPath)
-        if (res.data.ret.code === 0) {
-          this.offset = 1
-          this.getLists()
-        }
-      });
-    },
-    configCover(item) {
-      if (item?.config?.cover_img) {
-        return item.config.cover_img.replace('bmp', 'jpg')
-      } else {
-        return ''
-      }
-    },
-    /**
-     * 通过wx 录制音频
-     */
-    startRecordHandle() {
-      wx.startRecord();
-      wx.onVoiceRecordEnd({
-      // 录音时间超过一分钟没有停止的时候会执行 complete 回调
-        complete: function (res) {
-          const localId = res.localId;
-          console.log(res, 'voice record end')
-        }
-      });
-    },
-    endRecordHandle() {
-      let thiz = this
-      wx.stopRecord({
-        success: function (res) {
-          const localId = res.localId;
-          thiz.translateRecord(localId)
-        },
-        error: function (res) {
-          alert('error')
-        }
-      });
-    },
-    translateRecord(localId) {
-      alert('translate')
-      wx.translateVoice({
-        localId: localId, // 需要识别的音频的本地Id，由录音相关接口获得
-        isShowProgressTips: 1, // 默认为1，显示进度提示
-        success: function (res) {
-          alert(res.translateResult); // 语音识别的结果
-        }
-      });
-    }
   }
 }
 </script>
@@ -781,18 +694,85 @@ export default {
       }
     }
   }
+  .input_box .van-cell{
+    height: 100%;
+    background: transparent;
+    .van-field__body{
+      height: 100%;
+      input{
+        font-size: 0.41rem;
+        color: #0071de;
+        &::placeholder{
+          color: #0B80F1;
+          opacity: 0.4;
+        }
+      }
+      .van-field__button{
+        .van-button{
+          background: transparent;
+          font-size: 0.4rem;
+          font-weight: bold;
+          color: #FFFFFF;
+          border: none;
+        }
+
+      }
+    }
+  }
 </style>
 
 <style lang="scss" scoped>
   #wx-home {
     display: flex;
     flex-direction: column;
-    height: 100%;
     overflow: hidden;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-position: center;
-    background-image: url('~@/assets/wxImages/home_bg.png');
+    min-height:calc(800rem/50);
+    position: relative;
+    .right-r{
+      position: fixed;
+      bottom: 18%;
+      right: 2.5%;
+      width: 0.8rem;
+      height: 0.8rem;
+      background:#0081F5 ;
+      border-radius: 0.1rem;
+      text-align: center;
+      box-shadow: 0 0.08rem 0.1rem rgba(0,0,0,.3);
+      p{
+        font-size: 0.24rem;
+        color: #FFFFFF;
+        &:nth-child(1){
+          margin-top: 0.1rem;
+        }
+      }
+    }
+    .bg-index{
+      height: 100%;
+      img{
+        width: 100%;
+        display: flex;
+      }
+    }
+    .right-img{
+      position: fixed;
+      right: 0;
+      top: 10%;
+      width:0.8rem ;
+      height: 0.75rem;
+      img{
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .input_box{
+      position: absolute;
+      top: 11.75rem ;
+      left: 0.8rem;
+      width:5.8rem ;
+      height: 1.3rem;
+      background: url('~@/assets/wxImages/image/index_01.png') center / 100% 100% no-repeat;
+    }
     .wx-content {
       display: flex;
       flex-direction: column;

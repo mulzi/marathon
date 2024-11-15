@@ -1,83 +1,42 @@
 <template>
   <div class="products-wrapper">
-    <van-pull-refresh class="media-lists" v-model="refreshing" @refresh="refreshList">
-      <van-list
-        v-model="loading"
-        :finished="finished"
-        finished-text=""
-        @load="loadMore"
-      >
-        <div class="media-item-box">
-          <div v-for="item in lists" :key="item.id + item.created_at" :title="item"
-            class="media-item">
-            <div class="media-image">
-              <div class="media-header">
-                <div class="media-content">
-                  <img v-if="item.userimgurl" :src="item.userimgurl" alt="">
-                </div>
-                <p v-if="item.config.text && item.config.text.text" class="ellipsis" :title="item.config.text.text">
-                  {{ item.config.text.text }}
-                </p>
-              </div>
-            </div>
-            <div class="media-content">
-              <div class="media-video">
-                <img v-if="configCover(item)" :src="configCover(item)" alt="">
-                <div class="media-message">
-                  <p>{{ formatTime(item.created_at) }}</p>
-                  <p> {{ item.id }} </p>
-                </div>
-                <div v-if="item.status === 'success'"
-                  class="custom-icon" @click.stop.prevent="priviewHandle(item)"></div>
-                <div v-if="item.status === 'fail'"
-                  class="custom-fail">生成失败</div>
-              </div>
-              <div class="media-download">
-                <van-button v-if="item.status === 'success'"
-                round class="media-download-btn"
-                @click.stop.prevent="downloadHandle(item)"
-                @touchend.native.stop.prevent="downloadHandle(item)">保存视频</van-button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </van-list>
-    </van-pull-refresh>
-    <div class="media-limit">
-      <van-button class="control-button primary-control" type="default"
-        :disabled="uploaddisabled"
-        @click.stop.prevent="goHome"
-      >还想要一段</van-button>
-      <template v-if="false">
-        <p class="media-limit-tip">文博会期间每天最多可以生成3段视频哦！</p>
-        <p class="media-limit-tip">以上视频由KXWELL云拍摄系统生成，仅用于文博会期间记录您参观的精彩瞬间。</p>
-        <p class="media-limit-tip">本活动最终解释权归科旭威尔及深圳报业集团所有。</p>
-      </template>
-    </div>
-    <!-- 预览成品 -->
-    <van-popup v-if="popupVisible" v-model="popupVisible" closeable class="unit-popup">
-      <div class="products-view-wrapper">
-        <video webkit-playsinline playsinline x5-playsinline
-          id="viewVideo"
-          :src="priviewInfo.video_url"
-          controlslist="nodownload noremoteplayback"
-          muted
-          autoplay
-          controls
-          style="vertical-align: bottom; background: #000;"
-          width="100%" height="100%"></video>
+
+    <div class="media-lists">
+
+      <div class="top-img">
+        <img src="../../assets/wxImages/image/top_o1.png" alt="">
       </div>
-    </van-popup>
+      <van-pull-refresh  v-model="refreshing" @refresh="refreshList">
+        <van-list
+            v-model="loading"
+            :finished="finished"
+            finished-text=""
+            @load="loadMore"
+        >
+          <div class="media-item-box">
+            <VideoList v-for="item in lists" :key="item.id + item.created_at" :title="item" :item="item">
+            </VideoList>
+          </div>
+        </van-list>
+      </van-pull-refresh>
+
+      <div class="b-b-img">
+        <img src="../../assets/wxImages/image/b_b.png" alt="">
+      </div>
+    </div>
+
+    <div class="right-r" @click="goHome">
+      <p>再来</p>
+      <p>一段</p>
+    </div>
 
   </div>
 </template>
 
 <script>
 import { ProductList, getDspWeixinInfo } from '@/api/projects.js'
-import { downloadFileByBase64, calculationFormat, sizeFormat } from '@/unit/index.js'
-
+import VideoList from "@/wx/views/VideoList.vue";
 import Vue from 'vue'
-import { Toast } from 'vant';
 export default {
   name: "products",
   data() {
@@ -90,26 +49,13 @@ export default {
       refreshing: false,
       finished: false,
       uploadlimit: window.$config.WXInfo?.smart_count || 0,
-      popupVisible: false,
       priviewInfo: {
         file_url: ''
       },
     }
   },
-  computed: {
-    uploaddisabled: function() {
-      return false
-      const urlobj = JSON.parse(sessionStorage.urlobj)
-      return this.uploadlimit >= 3 && urlobj.tg !== 'tgh'
-    }
-  },
-  watch: {
-    popupVisible: function(val) {
-      if (!val) {
-        const video = document.getElementById('viewVideo')
-        video.src = ''
-      }
-    }
+  components:{
+    VideoList
   },
   mounted() {
     this.getLists()
@@ -185,7 +131,7 @@ export default {
         // 查询当前的任务数量
         this.getSmartCount()
       } catch (error) {
-        
+
       }
     },
     async getSmartCount() {
@@ -223,213 +169,62 @@ export default {
         return {}
       }
     },
-    configCover(item) {
-      if (item?.config?.cover_img) {
-        return item.config.cover_img.replace('png', 'jpg')
-      } else {
-        return ''
-      }
-    },
-    downloadHandle(item) {
-      const userAgent = navigator.userAgent.toLowerCase();
-      // 判断是否在微信浏览器中
-      if (userAgent.indexOf('micromessenger') !== -1) {
-        // 是微信浏览器
-        console.log('当前在微信浏览器');
-        this.$copyText(item.video_url).then(
-          (e) => {
-            Toast('下载链接复制成功，请在其他浏览器下载');
-          },
-          (e) => {
-            Toast('复制失败');
-          }
-        );
-
-      } else {
-        // 不是微信浏览器
-        console.log('当前在其他浏览器');
-        let name = item.video_url.substring(item.video_url.lastIndexOf('/')+1, item.video_url.length)
-  
-        downloadFileByBase64(item.video_url, name)
-      }
-      
-    },
     goHome() {
       this.$router.replace({
         path: '/home'
       })
     },
-    formatTime(time) {
-      return moment(time).format('YYYY-MM-DD HH:mm:ss')
-    },
-    async priviewHandle(item) {
-      this.priviewInfo = item
-      this.popupVisible = true
-      await this.$nextTick()
-      const video = document.getElementById('viewVideo')
-      video.addEventListener('canplay', () => {
-        video.play()
-        video.muted = false
-      })
-    },
+
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .products-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  background-image: url('~@/assets/wxImages/home_bg_black.png');
+  overflow-y:scroll ;
+  background: rgba(46,182,244,045);
+
+  .right-r{
+    position: fixed;
+    bottom: 18%;
+    right: 2.5%;
+    width: 0.8rem;
+    height: 0.8rem;
+    background:#0081F5 ;
+    border-radius: 0.1rem;
+    text-align: center;
+    box-shadow: 0 0.08rem 0.1rem rgba(0,0,0,.3);
+    p{
+      font-size: 0.24rem;
+      color: #FFFFFF;
+      &:nth-child(1){
+        margin-top: 0.1rem;
+      }
+    }
+  }
   .media-lists {
-    flex: 1;
-    // height: 100%;
-    overflow: auto;
+    height: 100vh;
+    .top-img{
+      width: 100%;
+      padding-top: 0.5rem;
+      margin-bottom: 0.3rem;
+      overflow: hidden;
+      img{
+        display: block;
+        width: 100%;
+      }
+    }
+    .b-b-img{
+      width: 100%;
+      padding-bottom: 0.6rem;
+      overflow: hidden;
+      img{
+        display: block;
+        width: 100%;
+      }
+    }
     &::-webkit-scrollbar {
       display: none; /* 隐藏 WebKit 内核浏览器的滚动条 */
-    }
-    .media-item {
-      display: flex;
-      height: 2.6rem;
-      padding: .1rem;
-      margin-bottom: .1rem;
-      .media-image {
-        display: flex;
-        justify-content: center;
-        width: 1rem;
-        flex: none;
-        .media-header {
-          width: .8rem;
-          .media-content {
-            height: .8rem;
-            border-radius: 50%;
-            overflow: hidden;
-          }
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-          p {
-            color: #fff;
-            line-height: 1.5;
-          }
-        }
-      }
-      .media-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        .media-video {
-          position: relative;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          overflow: hidden;
-          border-radius: .12rem;
-          background: rgba(222,222,222,0.45);
-          img {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
-          .media-message {
-            font-size: .12rem;
-            padding: .1rem;
-            color: #fff;
-            background: rgba(222,222,222,0.45);
-          }
-          .custom-icon {
-            position: absolute;
-            left: 50%;
-            top: 40%;
-            width: .5rem; /* 根据你的图标大小调整 */
-            height: .5rem; /* 根据你的图标大小调整 */
-            transform: translate(-50%, -50%);
-            background-repeat: no-repeat;
-            background-image: url('~@/assets/wxImages/play.png');
-            background-size: contain;
-          }
-          .custom-fail {
-            position: absolute;
-            left: 50%;
-            top: 40%;
-            transform: translate(-50%, -50%);
-            color: crimson;
-            font-size: .2rem;
-          }
-        }
-        .media-download {
-          height: .6rem;
-          line-height: .6rem;
-          .media-download-btn {
-            height: .4rem;
-            line-height: .4rem;
-            padding: 0 .3rem;
-            font-size: .14rem;
-            border-color: #00A5ED;
-          }
-        }
-      }
-    }
-  }
-  .media-limit {
-    flex: none;
-    // position: absolute;
-    // bottom: 0;
-    left: 0;
-    // width: 100%;
-    // height: 1.2rem;
-    padding: .2rem;
-    text-align: center;
-    border-radius: .2rem .2rem 0 0;
-    background-color: rgba(222,222,222,0.3);
-    backdrop-filter: blur(.14rem);
-    .control-button {
-      width: 88%;
-      height: .85rem;
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
-      border: none;
-      background-color: transparent;
-      &::before {
-        display: none;
-      }
-    }
-    .primary-control {
-      color: #fff;
-      background-image: url('~@/assets/wxImages/button_primary.png');
-    }
-    .media-limit-tip {
-      font-size: .11rem;
-      color: #005C96;
-    }
-  }
-  .unit-popup {
-    width: 100%;
-    background-color: transparent;
-    background: rgba(149,149,149,0.25);
-    box-shadow: 8px 8px 37px 0px rgba(0,0,0,0.13);
-    border-radius: .3rem;
-    backdrop-filter: blur(103.2110091743119px);
-    .products-view-wrapper {
-      padding: .48rem .2rem;
-      margin: auto;
-      .qrcode-wrapper {
-      }
-    }
-    .priview-id {
-      color: #fff;
-      font-size: .16rem;
-      line-height: 2;
     }
   }
 }

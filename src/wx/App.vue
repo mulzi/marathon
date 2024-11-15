@@ -10,14 +10,14 @@ import { ProductList, GetProjectsList } from '@/api/projects.js'
 export default {
   name: 'WxApp',
   async created() {
-    // await this.getProjectById()
-    // const goRoute = await this.judgeHandler()
-    // if (this.$route.path !== goRoute) {
-    //   this.$router.replace({
-    //     path: goRoute
-    //   })
-    // }
-    // this.goRoute = goRoute
+    await this.getProjectById()
+    const goRoute = await this.judgeHandler()
+    if (this.$route.path !== goRoute) {
+      this.$router.replace({
+        path: goRoute
+      })
+    }
+    this.goRoute = goRoute
   },
   data() {
     return {

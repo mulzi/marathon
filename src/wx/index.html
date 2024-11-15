@@ -16,7 +16,7 @@
     let docEl = document.documentElement,
     clientWidth = docEl.clientWidth,
     clientHeight = docEl.clientHeight;
-    docEl.style.fontSize = 100 * parseFloat((clientHeight / 896).toFixed(2)) + 'px';
+    docEl.style.fontSize = 100 * parseFloat((clientWidth / 750).toFixed(2)) + 'px';
     const initialHeight = clientHeight;
     (function(doc, win) {
       let docEl = doc.documentElement,
