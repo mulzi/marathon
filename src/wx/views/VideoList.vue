@@ -14,7 +14,12 @@
                 <div v-if="item.status === 'success'"
                   class="custom-icon" @click.stop.prevent="priviewHandle(item)"></div>
                 <div v-if="item.status === 'fail'"
-                  class="custom-fail">生成失败</div>
+                  class="custom-fail">匹配失败，未找到相关视频</div>
+                <div v-if="item.status === 'init'"
+                     class="custom-loading">正在生成中...</div>
+                <div v-if="item.status === 'stop'"
+                     class="custom-loading">正在排队中...</div>
+
               </div>
 
             </div>
@@ -441,9 +446,9 @@ export default {
             object-fit: cover;
           }
           .media-message {
-            font-size: .25rem;
-            width: 92%;
-            padding:0 4%;
+            font-size: .23rem;
+            width: 94%;
+            padding:0 3%;
             color: #fff;
             height: 1rem;
             background: linear-gradient(0deg,rgba(0,0,0,0.7),rgba(0,0,0,0.01));
@@ -470,10 +475,22 @@ export default {
           .custom-fail {
             position: absolute;
             left: 50%;
-            top: 40%;
+            top: 45%;
             transform: translate(-50%, -50%);
             color: crimson;
-            font-size: .2rem;
+            font-size: .4rem;
+            width: 100%;
+            text-align: center;
+          }
+          .custom-loading {
+            position: absolute;
+            left: 50%;
+            top: 45%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-size: .45rem;
+            width: 100%;
+            text-align: center;
           }
         }
         .media-download {
