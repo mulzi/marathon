@@ -34,7 +34,7 @@
                   </p>
                 </div>
               </div>
-              <div class="right_btn_box" v-if="one" @click="changeFlag">
+              <div class="right_btn_box" v-if="one" @click="changeFlag(item.status)" :class="[stype?'':'filter']">
                  <p class="p1">美好瞬间当然要永久留存呀~</p>
                  <p class="p2">点击保存</p>
               </div>
@@ -48,25 +48,6 @@
 
             </div>
 
-
-
-    <div class="media-download" v-if="false">
-      <van-button v-if="item.status === 'success'"
-                  round class="media-download-btn"
-                  @click.stop.prevent="downloadHandle(item)"
-                 >保存视频</van-button>
-    </div>
-    <div class="media-limit" v-if="false">
-      <van-button class="control-button primary-control" type="default"
-        :disabled="uploaddisabled"
-        @click.stop.prevent="goHome"
-      >还想要一段</van-button>
-      <template v-if="false">
-        <p class="media-limit-tip">文博会期间每天最多可以生成3段视频哦！</p>
-        <p class="media-limit-tip">以上视频由KXWELL云拍摄系统生成，仅用于文博会期间记录您参观的精彩瞬间。</p>
-        <p class="media-limit-tip">本活动最终解释权归科旭威尔及深圳报业集团所有。</p>
-      </template>
-    </div>
     <!-- 预览成品 -->
     <van-popup v-if="popupVisible" v-model="popupVisible" closeable class="unit-popup">
       <div class="products-view-wrapper">
@@ -113,24 +94,20 @@ export default {
       priviewInfo: {
         file_url: ''
       },
+      stype:false,
     }
   },
-  computed: {
-    uploaddisabled: function() {
-      return false
-      const urlobj = JSON.parse(sessionStorage.urlobj)
-      return this.uploadlimit >= 3 && urlobj.tg !== 'tgh'
-    }
-  },
+
   watch: {
     popupVisible: function(val) {
       if (!val) {
         const video = document.getElementById('viewVideo')
         video.src = ''
       }
-    }
+    },
   },
   mounted() {
+    this.stype = this.item.status === 'success';
     const thiz = this
     Vue.prototype.mediaUpload.$socket_io.on('smart_video_status', function(val) {
       if (val.openid === thiz.$root.Config.WXInfo.openid) {
@@ -140,7 +117,10 @@ export default {
     thiz.checkOrder()
   },
   methods: {
-    changeFlag(){
+    changeFlag(status){
+      if (status != 'success'){
+        return false
+      }
       this.one = false
       this.two = true
     },
@@ -163,7 +143,6 @@ export default {
         }
       }
       axios.post(url,params,header).then(res=>{
-        console.log(res)
         if (res.data.code == 0){
           if (res.data.data.paySuccess == true){
                 that.one = false
@@ -380,6 +359,9 @@ export default {
         font-size: 0.28rem;
         padding-left: 0.2rem;
         font-weight: bold;
+      }
+      &.filter{
+        filter: grayscale(100%);
       }
     }
     .right_btn_box-a {

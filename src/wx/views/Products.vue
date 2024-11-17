@@ -153,11 +153,12 @@ export default {
           get_from_user: true
           // status: ["success", "fail"]
         }
-        if (this.$root.Config.WXInfo.activity_mark_str) {
-          Object.assign(getProp, {
-            activity_mark_str: this.$root.Config.WXInfo.activity_mark_str
-          })
-        }
+        // if (this.$root.Config.WXInfo.activity_mark_str) {
+        //   Object.assign(getProp, {
+        //     activity_mark_str: this.$root.Config.WXInfo.activity_mark_str
+        //   })
+        // }
+        console.log(getProp)
 
         const res = await ProductList(getProp, this.$root.mediaPath)
 

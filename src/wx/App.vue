@@ -29,13 +29,13 @@ export default {
       let route = '/home'
       const getProp = {
         openid: this.$root.Config.WXInfo.openid,
-        activity_id: +JSON.parse(sessionStorage.urlobj).activity_id,
+        // activity_id: +JSON.parse(sessionStorage.urlobj).activity_id,
       }
-      if (this.$root.Config.WXInfo.activity_mark_str) {
-        Object.assign(getProp, {
-          activity_mark_str: this.$root.Config.WXInfo.activity_mark_str
-        })
-      }
+      // if (this.$root.Config.WXInfo.activity_mark_str) {
+      //   Object.assign(getProp, {
+      //     activity_mark_str: this.$root.Config.WXInfo.activity_mark_str
+      //   })
+      // }
 
       const res = await ProductList(getProp, this.$root.mediaPath)
 
